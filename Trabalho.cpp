@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 using namespace std;
 
 class Matriz {
@@ -49,7 +50,7 @@ public:
     }
 
     // Destrutor
-    ~Matriz() {
+    virtual ~Matriz() {
         for (int i = 0; i < linhas; i++) {
             delete[] dados[i];
         }
@@ -162,6 +163,27 @@ Matriz soma(Matriz A, Matriz B) {
     }
 };
 
+Matriz subtracao(Matriz A, Matriz B) {
+    // A-B=C
+    int lin_A = A.getLinhas();
+    int col_A = A.getColunas();
+    int lin_B = B.getLinhas();
+    int col_B = B.getColunas();
+    if (lin_A == lin_B and col_A == col_B) {
+        Matriz C = Matriz(lin_A, col_A);
+        for (int i = 0; i < lin_A; i++) {
+            for (int j = 0; j < col_A; j++) {
+                C.alterar(i,j, A.getDado(i,j) - B.getDado(i,j));
+            }
+        }
+        return C;
+    }else {
+        cout << "Erro: Matrizes com dimensões incompatíveis." << endl;
+        // Retorna uma matriz vazia de tamanho 0x0
+        return Matriz(0, 0);
+    }
+};
+
 Matriz multiplica_escalar(Matriz A, float escalar) {
     int col_A = A.getColunas();
     int lin_A = A.getLinhas();
@@ -201,10 +223,10 @@ Matriz multiplica_matrizes(Matriz A, Matriz B) {
 Matriz transposicao(Matriz A) {
     int lin_A = A.getLinhas();
     int col_A = A.getColunas();
-    Matriz C = Matriz(lin_A, col_A);
+    Matriz C = Matriz(col_A, lin_A);
 
-    for (int i = 0; i < lin_A; i++) {
-        for (int j = 0; j < col_A; j++) {
+    for (int i = 0; i < col_A; i++) {
+        for (int j = 0; j < lin_A; j++) {
             C.alterar(i,j, A.getDado(j,i));
         }
     }
@@ -229,6 +251,29 @@ Matriz pergunta_cria() {
     minhaMatriz.preencher(entrada);
     return minhaMatriz;
 }
+
+class MatrizQuadrada : public Matriz {
+public:
+    MatrizQuadrada(int n) : Matriz(n, n) {}
+
+    float traco() {
+        float soma = 0;
+        for (int i = 0; i < getLinhas(); i++) {
+            soma += getDado(i, i);
+        }
+        return soma;
+    }
+
+    float determinante() {
+        if (getLinhas() == 2) {
+            return getDado(0,0)*getDado(1,1) - getDado(0,1)*getDado(1,0);
+        } else {
+            cout << "Determinante so implementado para matrizes 2x2." << endl;
+            return 0;
+        }
+    }
+};
+
 
 #include <iostream>
 using namespace std;
@@ -286,15 +331,133 @@ public:
 
 
 int main() {
-    Lista lista = Lista();
-    Matriz A = Matriz(2,2);
-    A.preencher("[[1,2], [3,4]]");
-    lista.inserir(A);
-    Matriz B = multiplica_escalar(A, 5);
-    Matriz C = multiplica_matrizes(A, B);
-    lista.inserir(B);
-    lista.inserir(C);
-    lista.imprimir();
+    vector<Matriz*> matrizes; // Armazena ponteiros para matrizes criadas
+
+    int opcao;
+    do {
+        cout << "\n===== CALCULADORA DE MATRIZES =====" << endl;
+        cout << "1. Criar matriz" << endl;
+        cout << "2. Criar matriz quadrada" << endl;
+        cout << "3. Somar duas matrizes" << endl;
+        cout << "4. Subtrair duas matrizes" << endl;
+        cout << "5. Multiplicar duas matrizes" << endl;
+        cout << "6. Multiplicar matriz por escalar" << endl;
+        cout << "7. Transpor matriz" << endl;
+        cout << "8. Traco (matriz quadrada)" << endl;
+        cout << "9. Determinante (matriz quadrada)" << endl;
+        cout << "10. Ver todas as matrizes" << endl;
+        cout << "0. Sair" << endl;
+        cout << "Escolha uma opcao: ";
+        cin >> opcao;
+        cin.ignore();
+
+        if (opcao == 1) {
+            Matriz* m = new Matriz(pergunta_cria());
+            matrizes.push_back(m);
+            m->imprimir();
+            cout << "Sua matriz está salva. Caso queira fazer alguma conta com ela e não saiba seu índice, escolha 10" << endl;
+        }
+        else if (opcao == 2) {
+            int n;
+            cout << "Informe a ordem da matriz quadrada: ";
+            cin >> n;
+            cin.ignore();
+            MatrizQuadrada* mq = new MatrizQuadrada(n);
+            string entrada;
+            cout << "Digite a matriz no formato [[a,b],[c,d]]:\n";
+            getline(cin, entrada);
+            mq->preencher(entrada);
+            matrizes.push_back(mq);
+            mq->imprimir();
+        }
+        else if (opcao == 3 || opcao == 4 || opcao == 5) {
+            int i1, i2;
+            cout << "Índice da primeira matriz: "; cin >> i1;
+            cout << "Índice da segunda matriz: "; cin >> i2;
+
+            if (i1 >= matrizes.size() || i2 >= matrizes.size()) {
+                cout << "Índice inválido." << endl;
+                continue;
+            }
+
+            Matriz* res = nullptr;
+            if (opcao == 3)
+                res = new Matriz(soma(*matrizes[i1], *matrizes[i2]));
+            else if (opcao == 4)
+                res = new Matriz(subtracao(*matrizes[i1], *matrizes[i2]));
+            else
+                res = new Matriz(multiplica_matrizes(*matrizes[i1], *matrizes[i2]));
+
+            matrizes.push_back(res);
+            cout << "Resultado:\n";
+            res->imprimir();
+        }
+        else if (opcao == 6) {
+            int i; float esc;
+            cout << "Índice da matriz: "; cin >> i;
+            cout << "Escalar: "; cin >> esc;
+
+            if (i >= matrizes.size()) {
+                cout << "Índice inválido." << endl;
+                continue;
+            }
+
+            Matriz* res = new Matriz(multiplica_escalar(*matrizes[i], esc));
+            matrizes.push_back(res);
+            cout << "Resultado:\n";
+            res->imprimir();
+        }
+        else if (opcao == 7) {
+            int i;
+            cout << "Índice da matriz: "; cin >> i;
+            if (i >= matrizes.size()) {
+                cout << "Índice inválido." << endl;
+                continue;
+            }
+
+            Matriz* res = new Matriz(transposicao(*matrizes[i]));
+            matrizes.push_back(res);
+            cout << "Transposta:\n";
+            res->imprimir();
+        }
+        else if (opcao == 8 || opcao == 9) {
+            int i;
+            cout << "Índice da matriz quadrada: "; cin >> i;
+            if (i >= matrizes.size()) {
+                cout << "Índice inválido." << endl;
+                continue;
+            }
+
+            MatrizQuadrada* q = dynamic_cast<MatrizQuadrada*>(matrizes[i]);
+            if (!q) {
+                cout << "Essa matriz não é quadrada." << endl;
+                continue;
+            }
+
+            if (opcao == 8)
+                cout << "Traço: " << q->traco() << endl;
+            else
+                cout << "Determinante: " << q->determinante() << endl;
+        }
+        else if (opcao == 10) {
+            for (int i = 0; i < matrizes.size(); i++) {
+                cout << "[" << i << "]\n";
+                matrizes[i]->imprimir();
+            }
+        }
+        else if (opcao != 0) {
+            cout << "Opção inválida." << endl;
+        }
+
+    } while (opcao != 0);
+
+    // Limpeza de memória
+    for (Matriz* m : matrizes) {
+        delete m;
+    }
+
+    cout << "Programa encerrado." << endl;
     return 0;
 }
+
 
