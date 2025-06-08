@@ -59,7 +59,14 @@ class Matriz_Geral():
         except ValueError as e:
             print(f"Erro ao definir valores: {e}")
             raise
+    
+    def show_matriz(self):
+        """Exibe a matriz de forma formatada."""
+        for linha in self.valores:
+            print(linha)
+        print()    
 
+    
     @classmethod
     def Soma_Subtracao(cls, A, B, eh_soma:bool):
         try:
@@ -510,12 +517,6 @@ def delete_matriz(index, path):
                 i+=1
         file.write('\n'.join(new_content) + '\n')
 
-
-def show_matriz(M):
-    """Exibe a matriz de forma formatada."""
-    for linha in M:
-        print(linha)
-    print()    
 
 
 def label_matriz(M):
