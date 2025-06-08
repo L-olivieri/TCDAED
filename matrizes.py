@@ -450,3 +450,62 @@ class Diagonal(Quadrada):
         for valor in self.valores[0]:
             determinante *= valor
         return determinante
+
+
+
+def read_matriz(path):
+    """
+    Lê uma matriz de um arquivo.
+    O arquivo deve conter uma matriz onde cada linha é uma lista de números separados por espaços.
+    """
+    with open(path, 'r') as file:
+        M = []
+        for line in file:
+            # col = list(map(float, line.strip().split()))
+            col = [int(x) if x.isdigit() or (x[0] == '-' and x[1:].isdigit()) else float(x) for x in line.strip().split()]
+            M.append(col)
+    return M
+
+def write_matriz(M, path):
+    """
+    Escreve uma matriz em um arquivo.
+    Cada linha da matriz será escrita em uma linha do arquivo, com os números separados por espaços.
+    """
+    with open(path, 'r', encoding='utf-8') as file:
+        content = file.read()
+        i = content.count('Matriz')
+    with open(path, 'a', encoding='utf-8') as file:
+        file.write(f"Matriz {i}\n")
+        for linha in M:
+            file.write(' '.join(map(str, linha)) + '\n')
+        file.write('\n')
+
+
+def delete_matriz(index, path):
+    """
+    Deleta uma matriz de um arquivo.
+    O índice da matriz a ser deletada é passado como parâmetro.
+    """
+    with open(path, 'r', encoding='utf-8') as file:
+        content = file.read()
+        i = content.count('Matriz')
+    if index < 0 or index >= i:
+        raise IndexError("Índice da matriz inválido.")
+    with open(path, 'w', encoding='utf-8') as file:
+        lines = content.splitlines()
+        new_content = []
+        matriz_del = False
+        for line in lines:
+            if line.startswith(f"Matriz {index}"):
+               matriz_del = True
+            elif line.startswith("Matriz") and matriz_del:
+                matriz_del = False
+            if not matriz_del:
+                new_content.append(line)
+        i = 0
+        for index,matriz in enumerate(new_content):
+            if "Matriz" in matriz:
+                matriz_new = matriz[:7] + str(i)
+                new_content[index] = matriz_new
+                i+=1
+        file.write('\n'.join(new_content) + '\n')
