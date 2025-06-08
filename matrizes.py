@@ -509,3 +509,41 @@ def delete_matriz(index, path):
                 new_content[index] = matriz_new
                 i+=1
         file.write('\n'.join(new_content) + '\n')
+
+
+def show_matriz(M):
+    """Exibe a matriz de forma formatada."""
+    for linha in M:
+        print(linha)
+    print()    
+
+
+def label_matriz(M):
+    """Testa se a matriz é válida e classifica seu tipo."""
+    lin = len(M)
+    col = len(M[0])
+    cont_ts = 0
+    cont_ti = 0
+    for i in range(lin):
+        if len(M[i]) != col:
+            raise ValueError("Todas as linhas devem ter o mesmo número de colunas.")
+        for j in range(col):
+            if not isinstance(M[i][j], (int, float)):
+                raise TypeError("Todos os elementos da matriz devem ser números.")
+            if M[i][j] != 0:
+                if i < j:
+                    cont_ts += 1
+                elif i > j:
+                    cont_ti += 1
+    if lin == col:
+        if cont_ts == 0 and cont_ti == 0:
+            return "Matriz diagonal"
+        elif cont_ts == 0:
+            return "Matriz triangular superior"
+        elif cont_ti == 0:
+            return "Matriz triangular inferior"
+        else:
+            return "Matriz quadrada"
+    return "Matriz retangular"
+
+
