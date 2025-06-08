@@ -142,116 +142,6 @@ public:
     }
 };
 
-Matriz soma(Matriz A, Matriz B) {
-    // A+B=C
-    int lin_A = A.getLinhas();
-    int col_A = A.getColunas();
-    int lin_B = B.getLinhas();
-    int col_B = B.getColunas();
-    if (lin_A == lin_B and col_A == col_B) {
-        Matriz C = Matriz(lin_A, col_A);
-        for (int i = 0; i < lin_A; i++) {
-            for (int j = 0; j < col_A; j++) {
-                C.alterar(i,j, A.getDado(i,j) + B.getDado(i,j));
-            }
-        }
-        return C;
-    }else {
-        cout << "Erro: Matrizes com dimensões incompatíveis." << endl;
-        // Retorna uma matriz vazia de tamanho 0x0
-        return Matriz(0, 0);
-    }
-};
-
-Matriz subtracao(Matriz A, Matriz B) {
-    // A-B=C
-    int lin_A = A.getLinhas();
-    int col_A = A.getColunas();
-    int lin_B = B.getLinhas();
-    int col_B = B.getColunas();
-    if (lin_A == lin_B and col_A == col_B) {
-        Matriz C = Matriz(lin_A, col_A);
-        for (int i = 0; i < lin_A; i++) {
-            for (int j = 0; j < col_A; j++) {
-                C.alterar(i,j, A.getDado(i,j) - B.getDado(i,j));
-            }
-        }
-        return C;
-    }else {
-        cout << "Erro: Matrizes com dimensões incompatíveis." << endl;
-        // Retorna uma matriz vazia de tamanho 0x0
-        return Matriz(0, 0);
-    }
-};
-
-Matriz multiplica_escalar(Matriz A, float escalar) {
-    int col_A = A.getColunas();
-    int lin_A = A.getLinhas();
-    Matriz C = Matriz(lin_A, col_A);
-    for (int i = 0; i < lin_A; i++) {
-        for (int j = 0; j < col_A; j++) {
-            C.alterar(i,j, A.getDado(i,j) * escalar);
-        }
-    }
-    return C;
-};
-
-Matriz multiplica_matrizes(Matriz A, Matriz B) {
-    int lin_A = A.getLinhas();
-    int col_A = A.getColunas();
-    int lin_B = B.getLinhas();
-    int col_B = B.getColunas();
-    if (col_A == lin_B) {
-        Matriz C = Matriz(lin_A, col_B);
-        for (int i = 0; i < lin_A; i++) {
-            for (int j = 0; j < col_A; j++) {
-                int contador = 0;
-                for (int k = 0; k < col_A; k++) {
-                    contador += A.getDado(i,k) * B.getDado(k, j);
-                }
-                C.alterar(i, j, contador);
-            }
-        }
-        return C;
-    }
-    else {
-        cout << "Dimensões incompatíveis para produto de matrizes"<< endl;
-        return Matriz(0,0);
-    };
-}
-
-Matriz transposicao(Matriz A) {
-    int lin_A = A.getLinhas();
-    int col_A = A.getColunas();
-    Matriz C = Matriz(col_A, lin_A);
-
-    for (int i = 0; i < col_A; i++) {
-        for (int j = 0; j < lin_A; j++) {
-            C.alterar(i,j, A.getDado(j,i));
-        }
-    }
-    return C;
-}
-
-Matriz pergunta_cria() {
-    int linhas, colunas;
-    cout << "Digite o número de linhas: ";
-    cin >> linhas;
-    cout << "Digite o número de colunas: ";
-    cin >> colunas;
-    cin.ignore(); // Limpa o buffer do cin
-
-    Matriz minhaMatriz(linhas, colunas);
-
-
-    string entrada;
-    cout << "Digite a matriz no formato [[a,b,c],[d,e,f]]:\n";
-    getline(cin, entrada);
-
-    minhaMatriz.preencher(entrada);
-    return minhaMatriz;
-}
-
 class MatrizQuadrada : public Matriz {
 public:
     MatrizQuadrada(int n) : Matriz(n, n) {}
@@ -275,15 +165,12 @@ public:
 };
 
 
-#include <iostream>
-using namespace std;
-
 // Definição do nó da lista
 struct Node {
-    Matriz dado;
+    float dado;
     Node* proximo;
 
-    Node(const Matriz& valor) : dado(valor) {
+    Node(const float& valor) : dado(valor) {
         proximo = nullptr;
     }
 };
@@ -310,7 +197,7 @@ public:
     }
 
     // Método para inserir no início
-    void inserir(Matriz valor) {
+    void inserir(float valor) {
         Node* novo = new Node(valor);
         novo->proximo = inicio;
         inicio = novo;
@@ -321,7 +208,7 @@ public:
         Node* atual = inicio;
         cout << "Lista: \n";
         while (atual != nullptr) {
-            atual -> dado.imprimir();
+            cout << atual -> dado;
             cout << " -> ";
             atual = atual->proximo;
         }
@@ -329,6 +216,166 @@ public:
     }
 };
 
+Matriz* operator+(Matriz& A, Matriz& B) {
+    int lin = A.getLinhas();
+    int col = A.getColunas();
+
+    if (lin != B.getLinhas() || col != B.getColunas()) {
+        cout << "Erro: Matrizes com dimensões incompatíveis." << endl;
+        return new Matriz(0, 0);
+    }
+
+    // Verifica se ambas são quadradas
+    if (lin == col) {
+        return new MatrizQuadrada([&]{
+            MatrizQuadrada* C = new MatrizQuadrada(lin);
+            for (int i = 0; i < lin; i++)
+                for (int j = 0; j < col; j++)
+                    C->alterar(i,j, A.getDado(i,j) + B.getDado(i,j));
+            return *C;
+        }());
+    }
+
+    // Caso geral
+    Matriz* C = new Matriz(lin, col);
+    for (int i = 0; i < lin; i++)
+        for (int j = 0; j < col; j++)
+            C->alterar(i,j, A.getDado(i,j) + B.getDado(i,j));
+
+    return C;
+};
+
+
+Matriz* operator-(Matriz& A, Matriz& B) {
+    int lin = A.getLinhas();
+    int col = A.getColunas();
+
+    if (lin != B.getLinhas() || col != B.getColunas()) {
+        cout << "Erro: Matrizes com dimensões incompatíveis." << endl;
+        return new Matriz(0, 0);
+    }
+
+    // Verifica se ambas são quadradas
+    if (lin == col) {
+        return new MatrizQuadrada([&]{
+            MatrizQuadrada* C = new MatrizQuadrada(lin);
+            for (int i = 0; i < lin; i++)
+                for (int j = 0; j < col; j++)
+                    C->alterar(i,j, A.getDado(i,j) - B.getDado(i,j));
+            return *C;
+        }());
+    }
+
+    // Caso geral
+    Matriz* C = new Matriz(lin, col);
+    for (int i = 0; i < lin; i++)
+        for (int j = 0; j < col; j++)
+            C->alterar(i,j, A.getDado(i,j) - B.getDado(i,j));
+
+    return C;
+};
+
+
+
+Matriz* operator*(Matriz& A, float escalar) {
+    int col_A = A.getColunas();
+    int lin_A = A.getLinhas();
+    if (lin_A == col_A) {
+        return new MatrizQuadrada([&]{
+            MatrizQuadrada* C = new MatrizQuadrada(lin_A);
+            for (int i = 0; i < lin_A; i++)
+                for (int j = 0; j < col_A; j++)
+                    C->alterar(i,j, A.getDado(i,j)* escalar);
+            return *C;
+        }());
+    }
+    Matriz* C = new Matriz(lin_A, col_A);
+    for (int i = 0; i < lin_A; i++) {
+        for (int j = 0; j < col_A; j++) {
+            C->alterar(i,j, A.getDado(i,j) * escalar);
+        }
+    }
+    return C;
+};
+
+Matriz* operator *(Matriz A, Matriz B) {
+    int lin_A = A.getLinhas();
+    int col_A = A.getColunas();
+    int lin_B = B.getLinhas();
+    int col_B = B.getColunas();
+    if (col_A != lin_B) {
+        cout << "Dimensões incompatíveis para produto de matrizes"<< endl;
+        return nullptr;
+    }
+    if (lin_A == col_B) {
+        MatrizQuadrada* C = new MatrizQuadrada(lin_A);
+        for (int i = 0; i < lin_A; i++) {
+            for (int j = 0; j < col_A; j++) {
+                int contador = 0;
+                for (int k = 0; k < col_A; k++) {
+                    contador += A.getDado(i,k) * B.getDado(k, j);
+                }
+                C->alterar(i, j, contador);
+            }
+        }
+        return C;
+    }
+    Matriz* C = new Matriz(lin_A, col_B);
+    for (int i = 0; i < lin_A; i++) {
+        for (int j = 0; j < col_A; j++) {
+            int contador = 0;
+            for (int k = 0; k < col_A; k++) {
+                contador += A.getDado(i,k) * B.getDado(k, j);
+            }
+            C->alterar(i, j, contador);
+        }
+    }
+    return C;
+}
+
+Matriz* transposicao(Matriz& A) {
+    int lin_A = A.getLinhas();
+    int col_A = A.getColunas();
+    if (lin_A == col_A) {
+        MatrizQuadrada* C = new MatrizQuadrada(lin_A);
+        for (int i = 0; i < col_A; i++) {
+            for (int j = 0; j < lin_A; j++) {
+                C->alterar(i,j, A.getDado(j,i));
+            }
+        }
+        return C;
+    }
+    Matriz* C = new Matriz(col_A, lin_A);
+    for (int i = 0; i < col_A; i++) {
+        for (int j = 0; j < lin_A; j++) {
+            C->alterar(i,j, A.getDado(j,i));
+        }
+    }
+    return C;
+}
+
+Matriz* pergunta_cria() {
+    int linhas, colunas;
+    cout << "Digite o número de linhas: ";
+    cin >> linhas;
+    cout << "Digite o número de colunas: ";
+    cin >> colunas;
+    cin.ignore(); // Limpa o buffer do cin
+
+    Matriz* matriz = nullptr;
+    if (linhas == colunas) {
+        matriz = new MatrizQuadrada(linhas);  // ou (linhas, colunas) se for o caso
+    } else {
+        matriz = new Matriz(linhas, colunas);
+    }
+
+    string entrada;
+    cout << "Digite a matriz no formato [[a,b,c],[d,e,f]]:\n";
+    getline(cin, entrada);
+
+    matriz->preencher(entrada);
+    return matriz;
+}
 
 int main() {
     vector<Matriz*> matrizes; // Armazena ponteiros para matrizes criadas
@@ -337,40 +384,26 @@ int main() {
     do {
         cout << "\n===== CALCULADORA DE MATRIZES =====" << endl;
         cout << "1. Criar matriz" << endl;
-        cout << "2. Criar matriz quadrada" << endl;
-        cout << "3. Somar duas matrizes" << endl;
-        cout << "4. Subtrair duas matrizes" << endl;
-        cout << "5. Multiplicar duas matrizes" << endl;
-        cout << "6. Multiplicar matriz por escalar" << endl;
-        cout << "7. Transpor matriz" << endl;
-        cout << "8. Traco (matriz quadrada)" << endl;
-        cout << "9. Determinante (matriz quadrada)" << endl;
-        cout << "10. Ver todas as matrizes" << endl;
+        cout << "2. Somar duas matrizes" << endl;
+        cout << "3. Subtrair duas matrizes" << endl;
+        cout << "4. Multiplicar duas matrizes" << endl;
+        cout << "5. Multiplicar matriz por escalar" << endl;
+        cout << "6. Transpor matriz" << endl;
+        cout << "7. Traco (matriz quadrada)" << endl;
+        cout << "8. Determinante (matriz quadrada)" << endl;
+        cout << "9. Ver todas as matrizes" << endl;
         cout << "0. Sair" << endl;
         cout << "Escolha uma opcao: ";
         cin >> opcao;
         cin.ignore();
 
         if (opcao == 1) {
-            Matriz* m = new Matriz(pergunta_cria());
+            Matriz* m = (pergunta_cria());
             matrizes.push_back(m);
             m->imprimir();
             cout << "Sua matriz está salva. Caso queira fazer alguma conta com ela e não saiba seu índice, escolha 10" << endl;
         }
-        else if (opcao == 2) {
-            int n;
-            cout << "Informe a ordem da matriz quadrada: ";
-            cin >> n;
-            cin.ignore();
-            MatrizQuadrada* mq = new MatrizQuadrada(n);
-            string entrada;
-            cout << "Digite a matriz no formato [[a,b],[c,d]]:\n";
-            getline(cin, entrada);
-            mq->preencher(entrada);
-            matrizes.push_back(mq);
-            mq->imprimir();
-        }
-        else if (opcao == 3 || opcao == 4 || opcao == 5) {
+        else if (opcao == 2 || opcao == 3 || opcao == 4) {
             int i1, i2;
             cout << "Índice da primeira matriz: "; cin >> i1;
             cout << "Índice da segunda matriz: "; cin >> i2;
@@ -381,18 +414,18 @@ int main() {
             }
 
             Matriz* res = nullptr;
-            if (opcao == 3)
-                res = new Matriz(soma(*matrizes[i1], *matrizes[i2]));
-            else if (opcao == 4)
-                res = new Matriz(subtracao(*matrizes[i1], *matrizes[i2]));
+            if (opcao == 2)
+                res = (*matrizes[i1] + *matrizes[i2]);
+            else if (opcao == 3)
+                res = (*matrizes[i1] - *matrizes[i2]);
             else
-                res = new Matriz(multiplica_matrizes(*matrizes[i1], *matrizes[i2]));
+                res = (*matrizes[i1] * *matrizes[i2]);
 
             matrizes.push_back(res);
             cout << "Resultado:\n";
             res->imprimir();
         }
-        else if (opcao == 6) {
+        else if (opcao == 5) {
             int i; float esc;
             cout << "Índice da matriz: "; cin >> i;
             cout << "Escalar: "; cin >> esc;
@@ -402,12 +435,12 @@ int main() {
                 continue;
             }
 
-            Matriz* res = new Matriz(multiplica_escalar(*matrizes[i], esc));
+            Matriz* res = (*matrizes[i] * esc);
             matrizes.push_back(res);
             cout << "Resultado:\n";
             res->imprimir();
         }
-        else if (opcao == 7) {
+        else if (opcao == 6) {
             int i;
             cout << "Índice da matriz: "; cin >> i;
             if (i >= matrizes.size()) {
@@ -415,12 +448,12 @@ int main() {
                 continue;
             }
 
-            Matriz* res = new Matriz(transposicao(*matrizes[i]));
+            Matriz* res = transposicao(*matrizes[i]);
             matrizes.push_back(res);
             cout << "Transposta:\n";
             res->imprimir();
         }
-        else if (opcao == 8 || opcao == 9) {
+        else if (opcao == 7 || opcao == 8) {
             int i;
             cout << "Índice da matriz quadrada: "; cin >> i;
             if (i >= matrizes.size()) {
@@ -434,12 +467,12 @@ int main() {
                 continue;
             }
 
-            if (opcao == 8)
+            if (opcao == 7)
                 cout << "Traço: " << q->traco() << endl;
             else
                 cout << "Determinante: " << q->determinante() << endl;
         }
-        else if (opcao == 10) {
+        else if (opcao == 9) {
             for (int i = 0; i < matrizes.size(); i++) {
                 cout << "[" << i << "]\n";
                 matrizes[i]->imprimir();
@@ -459,5 +492,3 @@ int main() {
     cout << "Programa encerrado." << endl;
     return 0;
 }
-
-
