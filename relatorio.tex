@@ -1,0 +1,144 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}
+\usepackage{geometry}
+\geometry{a4paper, margin=2cm}
+
+\title{Relatório Técnico: Implementação 
+de Matrizes em C++}
+\author{Equipe}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+Este relatório descreve a implementação de uma biblioteca para manipulação de matrizes em C++, incluindo:
+\begin{itemize}
+    \item Estruturas de dados utilizadas
+    \item Divisão de módulos
+    \item Descrição das rotinas
+    \item Análise de complexidade (tempo e espaço)
+\end{itemize}
+
+\section{Estruturas de Dados Utilizadas}
+
+\subsection{Classe \texttt{Matriz}}
+Representa uma matriz genérica de dimensões $m \times n$.
+
+\textbf{Atributos:}
+\begin{itemize}
+    \item \texttt{linhas} (int): Número de linhas
+    \item \texttt{colunas} (int): Número de colunas
+    \item \texttt{dados} (\texttt{float**}): Matriz dinâmica alocada como um array de ponteiros
+\end{itemize}
+
+\subsection{Classe \texttt{MatrizQuadrada} (Herda de \texttt{Matriz})}
+Representa matrizes quadradas ($n \times n$), com operações específicas:
+
+\textbf{Métodos adicionais:}
+\begin{itemize}
+    \item \texttt{traco()}: Calcula o traço da matriz
+    \item \texttt{determinante()}: Calcula o determinante (implementado apenas para $2\times2$)
+\end{itemize}
+
+\section{Divisão de Módulos}
+O código está organizado em:
+\begin{enumerate}
+    \item Definição da Classe \texttt{Matriz} (operações básicas e alocação dinâmica)
+    \item Classe \texttt{MatrizQuadrada} (extensão para matrizes quadradas)
+    \item Operações Matemáticas (sobrecarga de operadores)
+    \item Interface do Usuário (menu interativo no \texttt{main()})
+\end{enumerate}
+
+\section{Descrição das Rotinas Principais}
+
+\subsection{Operações Básicas (\texttt{Matriz})}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Método/Função} & \textbf{Descrição} \\
+\hline
+\texttt{Matriz(int l, int c)} & Construtor que aloca memória para uma matriz $l \times c$ \\
+\hline
+\texttt{\~Matriz()} & Destrutor que libera a memória alocada \\
+\hline
+\texttt{preencher(string)} & Preenche a matriz a partir de uma string no formato \texttt{[[a,b],[c,d]]} \\
+\hline
+\texttt{alterar(i, j, valor)} & Modifica o valor na posição $(i, j)$ \\
+\hline
+\texttt{imprimir()} & Exibe a matriz no console \\
+\hline
+\end{tabular}
+
+\subsection{Operações Matemáticas}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Operação} & \textbf{Descrição} \\
+\hline
+\texttt{A + B} (\texttt{operator+}) & Soma duas matrizes (retorna uma nova matriz ou erro se dimensões incompatíveis) \\
+\hline
+\texttt{A - B} (\texttt{operator-}) & Subtrai duas matrizes \\
+\hline
+\texttt{A * escalar} & Multiplica a matriz por um escalar \\
+\hline
+\texttt{A * B} & Multiplicação de matrizes (retorna \texttt{nullptr} se dimensões incompatíveis) \\
+\hline
+\texttt{transposicao(A)} & Retorna a matriz transposta \\
+\hline
+\end{tabular}
+
+\subsection{Métodos Específicos (\texttt{MatrizQuadrada})}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Método} & \textbf{Descrição} \\
+\hline
+\texttt{traco()} & Soma os elementos da diagonal principal \\
+\hline
+\texttt{determinante()} & Calcula o determinante (apenas para matrizes $2\times2$) \\
+\hline
+\end{tabular}
+
+\section{Análise de Complexidade}
+
+\subsection{Complexidade de Tempo}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Operação} & \textbf{Complexidade} & \textbf{Explicação} \\
+\hline
+\texttt{Matriz::Matriz(l, c)} & $O(l \times c)$ & Alocação de memória para $l \times c$ elementos \\
+\hline
+\texttt{Matriz::preencher(str)} & $O(l \times c)$ & Processa cada elemento da string e armazena na matriz \\
+\hline
+\texttt{A + B / A - B} & $O(n^2)$ & Percorre todos os elementos das duas matrizes \\
+\hline
+\texttt{A * escalar} & $O(n^2)$ & Percorre todos os elementos da matriz \\
+\hline
+\texttt{A * B} & $O(n^3)$ & Triplo loop para multiplicação de matrizes \\
+\hline
+\texttt{transposicao(A)} & $O(n^2)$ & Percorre todos os elementos e os reposiciona \\
+\hline
+\texttt{traco()} & $O(n)$ & Percorre apenas a diagonal principal \\
+\hline
+\texttt{determinante()} & $O(1)$ & Cálculo direto para matriz $2\times2$ \\
+\hline
+\end{tabular}
+
+\subsection{Complexidade de Espaço}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Operação} & \textbf{Complexidade} & \textbf{Explicação} \\
+\hline
+\texttt{Matriz(l, c)} & $O(l \times c)$ & Armazena uma matriz $l \times c$ \\
+\hline
+\texttt{A + B / A - B} & $O(n^2)$ & Gera uma nova matriz de mesmo tamanho \\
+\hline
+\texttt{A * B} & $O(n^2)$ & Retorna uma matriz de tamanho $\text{lin\_A} \times \text{col\_B}$ \\
+\hline
+\texttt{transposicao(A)} & $O(n^2)$ & Gera uma nova matriz transposta \\
+\hline
+\end{tabular}
+
+
+\end{document}
