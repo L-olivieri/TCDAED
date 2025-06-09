@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <fstream>
 using namespace std;
 
 class Matriz {
@@ -9,6 +10,7 @@ protected:
     int linhas;
     int colunas;
     float** dados;
+    string nome;
 
     // Função auxiliar para limpar a string (remove [ ] e espaços)
     string limparString(const string& entrada) {
@@ -57,6 +59,9 @@ public:
         delete[] dados;
     }
 
+    void setNome(const string& n) {
+        nome = n;
+    }
     //getter das linhas
     int getLinhas() {
         return linhas;
@@ -133,6 +138,7 @@ public:
 
     // Método para imprimir a matriz
     virtual void imprimir() {
+        cout << nome << " Matriz generica " << linhas << "x" << colunas << ":\n";
         for (int i = 0; i < linhas; i++) {
             for (int j = 0; j < colunas; j++) {
                 cout << dados[i][j] << " ";
@@ -160,6 +166,15 @@ public:
         } else {
             cout << "Determinante so implementado para matrizes 2x2." << endl;
             return 0;
+        }
+    }
+    virtual void imprimir() {
+        cout <<nome << " Matriz Quadrada " << linhas << "x" << colunas << ":\n";
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                cout << dados[i][j] << " ";
+            }
+            cout << endl;
         }
     }
 };
@@ -327,7 +342,8 @@ public:
     }
 
     void imprimir() {
-        cout << "Matriz Triangular Inferior:\n";
+        cout <<nome << " Matriz Triangular Inferior:\n" << linhas << "x" << colunas << ":\n";
+         // Imprime a matriz triangular inferior
         for (int i = 0; i < getLinhas(); i++) {
             Node* atual = listas[i]->get_inicio();
             for (int j = 0; j < getColunas(); j++) {
@@ -437,7 +453,8 @@ public:
     }
 
     void imprimir() {
-        cout << "Matriz Triangular Superior:\n";
+        cout << nome << " Matriz Triangular Superior:\n" << linhas << "x" << colunas << ":\n";
+         // Imprime a matriz triangular superior
         for (int i = 0; i < getLinhas(); i++) {
             Node* atual = listas[i]->get_inicio();
             for (int j = 0; j < getColunas(); j++) {
@@ -717,6 +734,27 @@ Matriz* transposicao(Matriz& A) {
     return C;
 }
 
+string lerArquivoParaString(const string& nomeArquivo) {
+    ifstream arquivo(nomeArquivo);
+    string linha, resultado;
+
+    if (!arquivo.is_open()) {
+        cerr << "Erro ao abrir arquivo: " << nomeArquivo << endl;
+        return "";
+    }
+
+    while (getline(arquivo, linha)) {
+        resultado += linha + ",";  // separa os elementos com vírgula
+    }
+
+    // remove última vírgula extra, se houver
+    if (!resultado.empty() && resultado.back() == ',') {
+        resultado.pop_back();
+    }
+
+    return resultado;
+}
+
 Matriz* pergunta_cria() {
     int linhas, colunas;
     cout << "Digite o número de linhas: ";
@@ -749,6 +787,10 @@ Matriz* pergunta_cria() {
         delete matriz;
         return novamatriz;
     }
+    cout << "Qual o nome da matriz? ";
+    string nome;
+    getline(cin, nome);
+    matriz->setNome(nome);
     return matriz;
 }
 
@@ -767,6 +809,10 @@ int main() {
         cout << "7. Traco (matriz quadrada)" << endl;
         cout << "8. Determinante (matriz quadrada)" << endl;
         cout << "9. Ver todas as matrizes" << endl;
+        cout << "10. Deletar matriz" << endl;
+        cout << "11. Alterar matriz" << endl;
+        cout << "12. Apagar todas as matrizes" << endl;
+        cout << "13. Ler matriz de arquivo" << endl;
         cout << "0. Sair" << endl;
         cout << "Escolha uma opcao: ";
         cin >> opcao;
@@ -853,10 +899,75 @@ int main() {
                 matrizes[i]->imprimir();
             }
         }
+        else if (opcao == 10) {
+            int i;
+            cout << "Índice da matriz a ser deletada: "; cin >> i;
+            if (i >= matrizes.size()) {
+                cout << "Índice inválido." << endl;
+                continue;
+            }
+            delete matrizes[i]; // Libera a memória da matriz
+            matrizes.erase(matrizes.begin() + i); // Remove o ponteiro do vetor
+            cout << "Matriz deletada com sucesso." << endl;
+        }
+        else if (opcao == 11) {
+            int i, linha, coluna;
+            float valor;
+            cout << "Índice da matriz: "; cin >> i;
+            if (i >= matrizes.size()) {
+                cout << "Índice inválido." << endl;
+                continue;
+            }
+            cout << "Linha: "; cin >> linha;
+            cout << "Coluna: "; cin >> coluna;
+            cout << "Valor: "; cin >> valor;
+
+            if (linha < 0 || linha >= matrizes[i]->getLinhas() || coluna < 0 || coluna >= matrizes[i]->getColunas()) {
+                cout << "Posição inválida." << endl;
+                continue;
+            }
+
+            matrizes[i]->alterar(linha, coluna, valor);
+            cout << "Matriz alterada com sucesso." << endl;
+        }
+        else if (opcao == 12) {
+            for (Matriz* m : matrizes) {
+                delete m; // Libera a memória de cada matriz
+            }
+            matrizes.clear(); // Limpa o vetor
+            cout << "Todas as matrizes foram apagadas." << endl;
+        }
         else if (opcao != 0) {
             cout << "Opção inválida." << endl;
         }
+        else if (opcao == 13) {
+            string nome_arquivo;
+            cout << "Digite o nome do arquivo: ";
+            cin >> nome_arquivo;
+            cin.ignore(); // Limpa o buffer do cin
 
+            string conteudo = lerArquivoParaString(nome_arquivo);
+            Matriz* m = pergunta_cria(); // Simula a criação de uma matriz
+            m->preencher(conteudo);
+            cout << "Qual o nome da matriz? ";
+            string nome;
+            getline(cin, nome);
+            m->setNome(nome);
+            if (eh_inferior(m)) {
+                MatrizTriangularInferior* triang = new MatrizTriangularInferior(m->getLinhas());
+                triang->preencher(conteudo);
+                delete m; // limpa a intermediária
+                m = triang;
+            }
+            if (eh_superior(m)) {
+                MatrizTriangularSuperior* triang = new MatrizTriangularSuperior(m->getLinhas());
+                triang->preencher(conteudo);
+                delete m; // limpa a intermediária
+                m = triang;
+            }
+            matrizes.push_back(m);
+            cout << "Matriz lida do arquivo e salva com sucesso." << endl;
+        }
     } while (opcao != 0);
 
     // Limpeza de memória
