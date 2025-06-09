@@ -482,6 +482,69 @@ public:
     }
 };
 
+class MatrizDiagonal : public MatrizQuadrada {
+    private:
+    int ordem;
+    float* dados;
+public:
+    MatrizDiagonal(int n) : MatrizQuadrada(n) {
+        ordem = n;
+        dados = new float[n];
+        for (int i = 0; i < n; ++i) {
+            alterar(i, i, 0);  // Inicializa a diagonal com zeros
+        }
+    }
+
+    ~MatrizDiagonal() override {
+        delete[] dados;  // Libera a memória alocada para a diagonal
+    }
+    void alterar(int linha, int coluna, float valor) override {
+        if (linha != coluna) {
+            cout << "Erro: tentativa de alterar elemento fora da diagonal." << endl;
+            return;
+        }
+        dados [linha] = valor;  // Armazena o valor na diagonal
+    }
+
+    float getDado(int linha, int coluna) const override {
+        if (linha == coluna) {
+            return dados[linha];  // Retorna o valor da diagonal
+        }
+        return 0;  // Retorna zero para elementos fora da diagonal
+    }
+
+    void preencher(const string& entrada) override {
+        string limpa = limparString(entrada);  // usa método da classe base
+        stringstream ss(limpa);
+        string numero;
+        int count = 0;
+        // Formato da entrada // [[a,b,c],[d,e,f]] ou [a,b,c,d,e,f]. Assuma que terao numeros para todas as entradas, mesmo as fora da diagonal
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                if (!getline(ss, numero, ',')) {
+                    cout << "Erro: dados insuficientes para preencher matriz diagonal." << endl;
+                    return;
+                }
+                float valor = stof(numero);
+                if (i == j) alterar(i, j, valor);
+            }
+        }
+    }
+    
+    void imprimir() override {
+        cout << nome << " Matriz Diagonal:\n" << linhas << "x" << colunas << ":\n";
+        for (int i = 0; i < getLinhas(); i++) {
+            for (int j = 0; j < getColunas(); j++) {
+                if (i == j) {
+                    cout << getDado(i, j) << " ";
+                } else {
+                    cout << "0 ";
+                }
+            }
+            cout << endl;
+        }
+    }
+};
 bool eh_inferior (Matriz* matriz){
     if (matriz->getColunas() != matriz->getLinhas()) {
         return false;
@@ -510,6 +573,21 @@ bool eh_superior (Matriz* matriz){
     }
     return true;
 }
+bool eh_diagonal (Matriz* matriz){
+    if (matriz->getColunas() != matriz->getLinhas()) {
+        return false;
+    };
+    int ordem = matriz->getLinhas();
+    for (int i = 0; i< ordem; i++) {
+        for (int j = 0; j < ordem; j++) {
+            if (i != j and matriz->getDado(i, j) != 0) {
+                return false;
+            } 
+        }
+    }
+    return true;
+}
+
 Matriz* operator+(Matriz& A, Matriz& B) {
     int lin = A.getLinhas();
     int col = A.getColunas();
@@ -529,6 +607,14 @@ Matriz* operator+(Matriz& A, Matriz& B) {
             }
         }
 
+        if (eh_diagonal(soma)) {
+            MatrizDiagonal* diag = new MatrizDiagonal(lin);
+            for (int i = 0; i < lin; i++) {
+                diag->alterar(i, i, soma->getDado(i, i));
+            }
+            delete soma; // limpa a intermediária
+            return diag;
+        }
 
         if (eh_inferior(soma)) {
             MatrizTriangularInferior* triang = new MatrizTriangularInferior(lin);
@@ -583,6 +669,14 @@ Matriz* operator-(Matriz& A, Matriz& B) {
             }
         }
 
+        if (eh_diagonal(soma)) {
+            MatrizDiagonal* diag = new MatrizDiagonal(lin);
+            for (int i = 0; i < lin; i++) {
+                diag->alterar(i, i, soma->getDado(i, i));
+            }
+            delete soma; // limpa a intermediária
+            return diag;
+        }
 
         if (eh_inferior(soma)) {
             MatrizTriangularInferior* triang = new MatrizTriangularInferior(lin);
@@ -622,6 +716,31 @@ Matriz* operator*(Matriz& A, float escalar) {
     int col_A = A.getColunas();
     int lin_A = A.getLinhas();
     if (lin_A == col_A) {
+        if (eh_diagonal(&A)) {
+            MatrizDiagonal* C = new MatrizDiagonal(lin_A);
+            for (int i = 0; i < lin_A; i++) {
+                C->alterar(i, i, A.getDado(i,i) * escalar);
+            }
+            return C;
+        }
+        if (eh_inferior(&A)) {
+            MatrizTriangularInferior* C = new MatrizTriangularInferior(lin_A);
+            for (int i = 0; i < lin_A; i++) {
+                for (int j = 0; j <= i; j++) {
+                    C->alterar(i, j, A.getDado(i,j) * escalar);
+                }
+            }
+            return C;
+        }
+        if (eh_superior(&A)) {
+            MatrizTriangularSuperior* C = new MatrizTriangularSuperior(lin_A);
+            for (int i = 0; i < lin_A; i++) {
+                for (int j = i; j < col_A; j++) {
+                    C->alterar(i, j, A.getDado(i,j) * escalar);
+                }
+            }
+            return C;
+        }
         return new MatrizQuadrada([&]{
             MatrizQuadrada* C = new MatrizQuadrada(lin_A);
             for (int i = 0; i < lin_A; i++)
@@ -660,6 +779,15 @@ Matriz* operator *(Matriz& A, Matriz& B) {
                 C->alterar(i, j, contador);
             }
         }
+        if (eh_diagonal(C)) {
+            MatrizDiagonal* diag = new MatrizDiagonal(lin_A);
+            for (int i = 0; i < lin_A; i++) {
+                diag->alterar(i, i, C->getDado(i, i));
+            }
+            delete C; // limpa a intermediária
+            return diag;
+        }
+
         if (eh_inferior(C)) {
             MatrizTriangularInferior* triang = new MatrizTriangularInferior(lin_A);
             for (int i = 0; i < lin_A; i++) {
@@ -695,10 +823,18 @@ Matriz* operator *(Matriz& A, Matriz& B) {
     return C;
 }
 
-Matriz* transposicao(Matriz& A) {
+Matriz* transposicao(Matriz& A) {   
     int lin_A = A.getLinhas();
     int col_A = A.getColunas();
     if (lin_A == col_A) {
+        if (eh_diagonal(&A)) {
+            MatrizDiagonal* C = new MatrizDiagonal(lin_A);
+            for (int i = 0; i < lin_A; i++) {
+                C->alterar(i, i, A.getDado(i,i));
+            }
+            return C;
+        }
+
         if (eh_inferior(&A)) {
             MatrizTriangularSuperior* C = new MatrizTriangularSuperior(lin_A);
             for (int i = 0; i < col_A; i++) {
@@ -775,6 +911,12 @@ Matriz* pergunta_cria() {
     getline(cin, entrada);
 
     matriz->preencher(entrada);
+    if (eh_diagonal(matriz)) {
+        MatrizDiagonal* novamatriz = new MatrizDiagonal(linhas);
+        novamatriz ->preencher(entrada);
+        delete matriz;
+        return novamatriz;
+    }
     if (eh_inferior(matriz)) {
         MatrizTriangularInferior* novamatriz = new MatrizTriangularInferior(linhas);
         novamatriz ->preencher(entrada);
@@ -786,6 +928,7 @@ Matriz* pergunta_cria() {
         novamatriz ->preencher(entrada);
         delete matriz;
         return novamatriz;
+    
     }
     cout << "Qual o nome da matriz? ";
     string nome;
@@ -813,6 +956,7 @@ int main() {
         cout << "11. Alterar matriz" << endl;
         cout << "12. Apagar todas as matrizes" << endl;
         cout << "13. Ler matriz de arquivo" << endl;
+        cout << "14. Inserir matriz identidade" << endl;
         cout << "0. Sair" << endl;
         cout << "Escolha uma opcao: ";
         cin >> opcao;
@@ -937,9 +1081,6 @@ int main() {
             matrizes.clear(); // Limpa o vetor
             cout << "Todas as matrizes foram apagadas." << endl;
         }
-        else if (opcao != 0) {
-            cout << "Opção inválida." << endl;
-        }
         else if (opcao == 13) {
             string nome_arquivo;
             cout << "Digite o nome do arquivo: ";
@@ -967,6 +1108,21 @@ int main() {
             }
             matrizes.push_back(m);
             cout << "Matriz lida do arquivo e salva com sucesso." << endl;
+        }
+        else if (opcao == 14) {
+            int n;
+            cout << "Digite a ordem da matriz identidade: ";
+            cin >> n;
+            MatrizDiagonal* identidade = new MatrizDiagonal(n);
+            for (int i = 0; i < n; i++) {
+                identidade->alterar(i, i, 1.0f);
+            }
+            identidade->setNome("Matriz Identidade");
+            matrizes.push_back(identidade);
+            cout << "Matriz identidade criada e salva com sucesso." << endl;
+        }
+                else if (opcao != 0) {
+            cout << "Opção inválida." << endl;
         }
     } while (opcao != 0);
 
